@@ -1,11 +1,11 @@
 #pragma once
 
-#include <array>
+#include "magic_enum/magic_enum.hpp"
+
 #include <cstdint>
 #include <format>
 #include <string>
 #include <string_view>
-#include <utility>
 
 namespace tools {
 
@@ -13,6 +13,8 @@ enum class ErrorCode : uint8_t {
     NotFounded,
     OutOfRange,
     Parse,
+    Overflow,
+    Inserted,
     Unknown,
 };
 
@@ -26,15 +28,10 @@ struct Error final {
 template <>
 struct std::formatter<tools::ErrorCode> : std::formatter<std::string_view> {
     auto format(tools::ErrorCode ec, std::format_context& ctx) const {
-        constexpr auto names = std::to_array<std::string_view>({
-            "NotFounded",
-            "OutOfRange",
-            "Parse"
-            "Unknown",
-        });
-        auto idx = std::to_underlying(ec);
-        std::string_view name =
-            (idx < names.size()) ? names.at(idx) : "Unknown";
+        const auto name = magic_enum::enum_name(ec);
+        if (name.empty()) {
+            return std::formatter<std::string_view>::format("Unknown", ctx);
+        }
         return std::formatter<std::string_view>::format(name, ctx);
     }
 };

@@ -31,8 +31,8 @@ class ListTasks final {
     void AddTask(std::string name, bool done, std::optional<Date> date = {});
     void AddTask(Task task);
 
-    tools::Result<void> Complete(size_t index) noexcept;
-    tools::Result<void> Uncomplete(size_t index) noexcept;
+    tools::Result<void> Complete(size_t number) noexcept;
+    tools::Result<void> Uncomplete(size_t number) noexcept;
 
     tools::Result<void> SetDate(size_t index, Date date) noexcept;
 
@@ -41,13 +41,20 @@ class ListTasks final {
         return std::span{tasks_};
     }
 
-    void Print() const;
+    [[nodiscard]]
+    tools::Result<void> Print() const;
     [[nodiscard]]
     tools::Result<void> WriteToJSON(
         const std::filesystem::path& file_path) const;
     [[nodiscard]]
     tools::Result<void> WriteToYAML(
         const std::filesystem::path& file_path) const;
+
+    [[nodiscard]]
+    tools::Result<void> ReadFromJSON(const std::filesystem::path& file_path);
+
+    [[nodiscard]]
+    tools::Result<void> ReadFromYAML(const std::filesystem::path& file_path);
 
  private:
     std::vector<Task> tasks_;

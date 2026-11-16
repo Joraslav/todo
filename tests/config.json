@@ -1,0 +1,4 @@
+{
+    "storage_dir": "./tests/storage",
+    "storage_name": "tasks.json"
+}

@@ -53,6 +53,14 @@ Result<Config> ParseJson(const fs::path& config_path) {
                                        config_path.string()),
             });
         }
+        if (ec.ec == glz::error_code::file_extension_not_supported) {
+            return std::unexpected(Error{
+                .code = ErrorCode::Parse,
+                .message = std::format("File {} not supported format JSON: {}",
+                                       config_path.string(),
+                                       glz::format_error(ec, buffer)),
+            });
+        }
         if (ec.ec == glz::error_code::parse_error) {
             return std::unexpected(Error{
                 .code = ErrorCode::Parse,
@@ -108,20 +116,22 @@ Result<Config> ConfigManager::LoadConfig(const fs::path& config_path) {
 }
 
 ConfigManager::ConfigManager(const std::optional<fs::path>& config_path) {
-    if (!config_path.has_value()) {
+    fs::path path_to_load;
+    if (config_path.has_value()) {
+        path_to_load = *config_path;
+    } else {
         const auto default_config_dir = GetDefaultConfigDir();
         if (!default_config_dir.has_value()) {
             throw std::runtime_error(
                 std::format("{}", default_config_dir.error()));
         }
-        const fs::path path_config =
-            default_config_dir.value() / fs::path{config_name_};
-        const auto config = LoadConfig(path_config);
-        if (!config.has_value()) {
-            throw std::runtime_error(std::format("{}", config.error()));
-        }
-        config_ = config.value();
+        path_to_load = *default_config_dir / fs::path{config_name_};
     }
+    const auto config_res = LoadConfig(path_to_load);
+    if (!config_res) {
+        throw std::runtime_error(std::format("{}", config_res.error()));
+    }
+    config_ = *config_res;
 }
 
 void ConfigManager::SetStorageDir(std::string_view new_storage_dir) noexcept {
